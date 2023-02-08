@@ -1,5 +1,5 @@
 use secrecy::ExposeSecret;
-use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 use zero2prod::configurations::get_configurations;
 use zero2prod::startup::run;
@@ -12,12 +12,15 @@ async fn main() -> std::io::Result<()> {
 
     let configurations = get_configurations().expect("Failed to read configurations.");
 
-    let connection_pool =
-        PgPool::connect(&configurations.database.connection_string().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres.");
+    let connection_pool = PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy(&configurations.database.connection_string().expose_secret())
+        .expect("Failed to connect to Postgres.");
 
-    let address = format!("127.0.0.1:{}", configurations.application_port);
+    let address = format!(
+        "{}:{}",
+        configurations.application.host, configurations.application.port
+    );
     let listener = TcpListener::bind(address).expect("Failed to bind random port.");
     run(listener, connection_pool)?.await
 }
