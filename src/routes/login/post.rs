@@ -3,7 +3,6 @@ use crate::authentication::AuthError;
 use crate::authentication::Credentials;
 use crate::routes::error_chain_fmt;
 use crate::session_state::TypedSession;
-use actix_session::Session;
 use actix_web::error::InternalError;
 use actix_web::http::header::LOCATION;
 use actix_web::web;
